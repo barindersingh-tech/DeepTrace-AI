@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DeepTrace AI estimates whether an image may be AI-generated using a deep-learning image classifier.">
+  <title>DeepTrace AI | Image Authenticity Lab</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+  <header class="topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark">D<span>·</span></span>
+      <span>DEEPTRACE <small>AI IMAGE LAB</small></span>
+    </a>
+    <div class="status"><span class="status-dot"></span> DEEP LEARNING ANALYSIS</div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div class="eyebrow"><span class="eyebrow-line"></span> IMAGE FORENSICS / 01</div>
+      <h1>Is it real,<br><span>or generated?</span></h1>
+      <p class="hero-copy">Inspect an image with a pretrained deep-learning classifier. Get a prediction, confidence score, and a breakdown of the model's top classes.</p>
+      <div class="model-pill"><span class="spark">✦</span> Transformer vision model <span class="pill-divider">/</span> CPU compatible</div>
+    </section>
+
+    <section class="workspace">
+      <div class="panel upload-panel">
+        <div class="panel-heading">
+          <div><span class="step">01</span><h2>Upload image</h2></div>
+          <span class="tiny-label">PNG · JPG · WEBP</span>
+        </div>
+        <form id="analyze-form">
+          <input type="file" id="image-input" name="image" accept=".png,.jpg,.jpeg,.webp,.bmp,image/*" hidden>
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose or drop an image">
+            <div class="upload-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M4 15.5v3A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg>
+            </div>
+            <strong>Drop an image here</strong>
+            <span>or <b>browse files</b></span>
+            <small>Maximum file size: 12 MB</small>
+          </div>
+          <div class="preview-wrap" id="preview-wrap" hidden>
+            <img id="preview-image" alt="Selected image preview">
+            <div class="preview-info"><span class="preview-label">SELECTED FILE</span><strong id="file-name"></strong><button type="button" id="change-image" class="text-button">Change image ↗</button></div>
+          </div>
+          <button class="primary-button" type="submit" id="analyze-button" disabled>
+            <span id="button-text">Analyze image</span><span class="button-arrow">↗</span>
+          </button>
+        </form>
+        <div class="privacy-note"><span>◈</span> Images are processed locally by this app server and stored temporarily for analysis.</div>
+      </div>
+
+      <div class="panel results-panel">
+        <div class="panel-heading">
+          <div><span class="step">02</span><h2>Analysis result</h2></div>
+          <span class="tiny-label" id="result-state">AWAITING INPUT</span>
+        </div>
+        <div id="empty-state" class="empty-state">
+          <div class="scan-graphic">
+            <div class="scan-ring ring-one"></div><div class="scan-ring ring-two"></div>
+            <div class="scan-core"><span>◉</span></div>
+            <div class="scan-cross cross-one"></div><div class="scan-cross cross-two"></div>
+          </div>
+          <h3>Ready to inspect</h3>
+          <p>Your analysis will appear here after you upload an image.</p>
+          <div class="empty-meta"><span>01 / INPUT</span><span>02 / INFERENCE</span><span>03 / RESULT</span></div>
+        </div>
+        <div id="loading-state" class="loading-state" hidden>
+          <div class="loader"></div><h3>Analyzing image</h3>
+          <p id="loading-message">Preparing the model…</p>
+          <div class="loading-track"><span></span></div>
+          <small>First run may take longer while model weights download.</small>
+        </div>
+        <div id="result-state-content" class="result-content" hidden>
+          <div class="result-badge" id="result-badge"><span class="result-icon">◈</span><span id="result-title">Prediction</span></div>
+          <p id="result-explanation" class="result-explanation"></p>
+          <div class="confidence-block">
+            <div class="confidence-heading"><span>TOP CLASS SCORE</span><strong id="confidence-value">—</strong></div>
+            <div class="confidence-track"><span id="confidence-bar"></span></div>
+            <small>Model score, not a guarantee of authenticity.</small>
+          </div>
+          <div class="details">
+            <div class="detail-row"><span>Top model label</span><strong id="top-label">—</strong></div>
+            <div class="detail-row"><span>Image analyzed</span><strong id="analyzed-name">—</strong></div>
+          </div>
+          <div class="class-breakdown"><h4>TOP MODEL CLASSES</h4><div id="class-list"></div></div>
+          <button type="button" id="reset-button" class="secondary-button">Analyze another image <span>↗</span></button>
+        </div>
+        <div id="error-state" class="error-state" hidden>
+          <div class="error-icon">!</div><h3>Analysis could not finish</h3><p id="error-message"></p>
+          <button type="button" id="retry-button" class="secondary-button">Try again</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="bottom-grid">
+      <article class="info-card"><div class="info-icon">01</div><div><h3>Model inference</h3><p>A pretrained vision transformer scores the uploaded image against its learned classes.</p></div></article>
+      <article class="info-card"><div class="info-icon">02</div><div><h3>Transparent output</h3><p>See the top label and score distribution instead of receiving only a yes/no answer.</p></div></article>
+      <article class="info-card"><div class="info-icon">03</div><div><h3>Know the limits</h3><p>Compression, editing, unfamiliar generators, and dataset bias can affect predictions.</p></div></article>
+    </section>
+
+    <section class="notice"><span class="notice-mark">i</span><p><strong>Academic prototype:</strong> This tool provides an estimate, not proof that an image is real or AI-generated. Do not use the result as the sole basis for important decisions. Model performance depends on its training data and may not generalize to every image source.</p></section>
+    <footer><span>DEEPTRACE AI <span class="footer-dot">•</span> DEEP LEARNING MINI PROJECT</span><span>Built with Python · Flask · Transformers</span></footer>
+  </main>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
